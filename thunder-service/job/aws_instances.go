@@ -17,12 +17,14 @@
 package job
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	cloudwatchTypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/ercole-io/ercole/v2/model"
 	"github.com/ercole-io/ercole/v2/thunder-service/database"
 )
@@ -32,24 +34,25 @@ func (job *AwsDataRetrieveJob) FetchAwsNotActiveInstances(profile model.AwsProfi
 
 	listRec := make([]interface{}, 0)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(profile.Region),
-		Credentials: credentials.NewStaticCredentials(profile.AccessKeyId, *profile.SecretAccessKey, ""),
-	})
+	credsProvider := credentials.NewStaticCredentialsProvider(profile.AccessKeyId, *profile.SecretAccessKey, "")
+
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(credsProvider),
+		config.WithRegion(profile.Region))
 	if err != nil {
 		return err
 	}
 
-	ec2Svc := ec2.New(sess)
+	ec2Client := ec2.NewFromConfig(cfg)
 
-	resultec2Svc, err := ec2Svc.DescribeInstances(nil)
+	resultec2Svc, err := ec2Client.DescribeInstances(context.Background(), nil)
 	if err != nil {
 		return err
 	}
 
 	for _, w := range resultec2Svc.Reservations {
 		for _, i := range w.Instances {
-			if *i.State.Name == "stopped" {
+			if i.State.Name == ec2Types.InstanceStateNameStopped {
 				var objectName string
 
 				for _, name := range i.Tags {
@@ -68,7 +71,7 @@ func (job *AwsDataRetrieveJob) FetchAwsNotActiveInstances(profile model.AwsProfi
 				recommendation.ObjectType = model.AwsComputeInstance
 				recommendation.Details = []map[string]interface{}{
 					{"INSTANCE_NAME": objectName},
-					{"INSTANCE_TYPE": *i.InstanceType},
+					{"INSTANCE_TYPE": i.InstanceType},
 					{"STATUS": "stopped"},
 				}
 				recommendation.CreatedAt = time.Now().UTC()
@@ -93,22 +96,23 @@ func (job *AwsDataRetrieveJob) FetchAwsComputeInstanceRightsizing(profile model.
 
 	listRec := make([]interface{}, 0)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(profile.Region),
-		Credentials: credentials.NewStaticCredentials(profile.AccessKeyId, *profile.SecretAccessKey, ""),
-	})
+	credsProvider := credentials.NewStaticCredentialsProvider(profile.AccessKeyId, *profile.SecretAccessKey, "")
+
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(credsProvider),
+		config.WithRegion(profile.Region))
 	if err != nil {
 		return err
 	}
 
-	ec2Svc := ec2.New(sess)
+	ec2Client := ec2.NewFromConfig(cfg)
 
-	resultec2Svc, err := ec2Svc.DescribeInstances(nil)
+	resultec2Svc, err := ec2Client.DescribeInstances(context.Background(), nil)
 	if err != nil {
 		return err
 	}
 
-	instanceTypes, err := ec2Svc.DescribeInstanceTypes(nil)
+	instanceTypes, err := ec2Client.DescribeInstanceTypes(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -120,7 +124,7 @@ func (job *AwsDataRetrieveJob) FetchAwsComputeInstanceRightsizing(profile model.
 		for _, i := range w.Instances {
 			var average, maximum float64
 
-			averageCPU := GetMetricStatistics(sess, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 3600, "Average", "Percent", timePast, timeNow)
+			averageCPU := GetMetricStatistics(cfg, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 3600, cloudwatchTypes.StatisticAverage, cloudwatchTypes.StandardUnitPercent, timePast, timeNow)
 			countAverageCPU := 0
 
 			for _, op := range averageCPU.Datapoints {
@@ -131,7 +135,7 @@ func (job *AwsDataRetrieveJob) FetchAwsComputeInstanceRightsizing(profile model.
 				}
 			}
 
-			maxCPU := GetMetricStatistics(sess, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 3600, "Maximum", "Percent", timePast, timeNow)
+			maxCPU := GetMetricStatistics(cfg, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 3600, cloudwatchTypes.StatisticMaximum, cloudwatchTypes.StandardUnitPercent, timePast, timeNow)
 			countMaxCPU := 0
 
 			for _, op := range maxCPU.Datapoints {
@@ -145,7 +149,7 @@ func (job *AwsDataRetrieveJob) FetchAwsComputeInstanceRightsizing(profile model.
 			isKoCPU := false
 
 			for _, v := range instanceTypes.InstanceTypes {
-				if *v.InstanceType == *i.InstanceType && *v.VCpuInfo.DefaultVCpus == 1 {
+				if v.InstanceType == i.InstanceType && *v.VCpuInfo.DefaultVCpus == 1 {
 					isKoCPU = true
 				}
 
@@ -181,7 +185,7 @@ func (job *AwsDataRetrieveJob) FetchAwsComputeInstanceRightsizing(profile model.
 				recommendation.ObjectType = model.AwsResizeComputeInstance
 				recommendation.Details = []map[string]interface{}{
 					{"INSTANCE_NAME": objectName},
-					{"SHAPE": *i.InstanceType},
+					{"SHAPE": i.InstanceType},
 					{"%_CPU_AVERAGE_7DD(DAILY)": average},
 					{"NUMBER_OF_THRESHOLD_REACHED_(>50%)": "3"},
 					{"%_CPU_AVERAGE_7DD(MINUTES)": maximum},
@@ -210,17 +214,18 @@ func (job *AwsDataRetrieveJob) FetchAwsInstanceDecommissioning2(profile model.Aw
 
 	listRec := make([]interface{}, 0)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(profile.Region),
-		Credentials: credentials.NewStaticCredentials(profile.AccessKeyId, *profile.SecretAccessKey, ""),
-	})
+	credsProvider := credentials.NewStaticCredentialsProvider(profile.AccessKeyId, *profile.SecretAccessKey, "")
+
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(credsProvider),
+		config.WithRegion(profile.Region))
 	if err != nil {
 		return err
 	}
 
-	ec2Svc := ec2.New(sess)
+	ec2Client := ec2.NewFromConfig(cfg)
 
-	resultec2Svc, err := ec2Svc.DescribeInstances(nil)
+	resultec2Svc, err := ec2Client.DescribeInstances(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -232,7 +237,7 @@ func (job *AwsDataRetrieveJob) FetchAwsInstanceDecommissioning2(profile model.Aw
 		for _, i := range w.Instances {
 			var average, maximum float64
 
-			averageCPU := GetMetricStatistics(sess, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 86400, "Average", "Percent", timePast, timeNow)
+			averageCPU := GetMetricStatistics(cfg, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 86400, cloudwatchTypes.StatisticAverage, cloudwatchTypes.StandardUnitPercent, timePast, timeNow)
 			countAverageCPU := 0
 
 			for _, op := range averageCPU.Datapoints {
@@ -243,7 +248,7 @@ func (job *AwsDataRetrieveJob) FetchAwsInstanceDecommissioning2(profile model.Aw
 				}
 			}
 
-			maxCPU := GetMetricStatistics(sess, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 3600, "Maximum", "Percent", timePast, timeNow)
+			maxCPU := GetMetricStatistics(cfg, "InstanceId", *i.InstanceId, "CPUUtilization", "AWS/EC2", 3600, cloudwatchTypes.StatisticMaximum, cloudwatchTypes.StandardUnitPercent, timePast, timeNow)
 			countMaxCPU := 0
 
 			for _, op := range maxCPU.Datapoints {
@@ -283,7 +288,7 @@ func (job *AwsDataRetrieveJob) FetchAwsInstanceDecommissioning2(profile model.Aw
 				recommendation.ObjectType = model.AwsComputeInstanceNotUsed
 				recommendation.Details = []map[string]interface{}{
 					{"INSTANCE_NAME": objectName},
-					{"SHAPE": *i.InstanceType},
+					{"SHAPE": i.InstanceType},
 					{"%_CPU_AVERAGE_7DD(DAILY)": average},
 					{"NUMBER_OF_THRESHOLD_REACHED_(>5%)": "3"},
 					{"%_CPU_AVERAGE_7DD(MINUTES)": maximum},

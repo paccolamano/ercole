@@ -16,34 +16,33 @@
 package job
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 )
 
-func GetMetricStatistics(sess *session.Session, dimensionName string, dimensionValue string, metric string, namespace string, period int64, statistics string, unit string, startTime time.Time, endTime time.Time) *cloudwatch.GetMetricStatisticsOutput {
-	svc := cloudwatch.New(sess)
+func GetMetricStatistics(cfg aws.Config, dimensionName string, dimensionValue string, metric string, namespace string, period int32, statistics types.Statistic, unit types.StandardUnit, startTime time.Time, endTime time.Time) *cloudwatch.GetMetricStatisticsOutput {
+	svc := cloudwatch.NewFromConfig(cfg)
 
 	params := &cloudwatch.GetMetricStatisticsInput{
 		EndTime:    aws.Time(endTime),
 		MetricName: aws.String(metric),
 		Namespace:  aws.String(namespace),
-		Period:     aws.Int64(period),
+		Period:     aws.Int32(period),
 		StartTime:  aws.Time(startTime),
-		Statistics: []*string{
-			aws.String(statistics),
-		},
-		Dimensions: []*cloudwatch.Dimension{
+		Statistics: []types.Statistic{statistics},
+		Dimensions: []types.Dimension{
 			{
 				Name:  aws.String(dimensionName),
 				Value: aws.String(dimensionValue),
 			},
 		},
-		Unit: aws.String(unit),
+		Unit: unit,
 	}
-	resp, err := svc.GetMetricStatistics(params)
+	resp, err := svc.GetMetricStatistics(context.Background(), params)
 
 	if err != nil {
 		return nil

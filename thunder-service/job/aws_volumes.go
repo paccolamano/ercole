@@ -17,13 +17,14 @@
 package job
 
 import (
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/ercole-io/ercole/v2/model"
 	"github.com/ercole-io/ercole/v2/thunder-service/database"
 )
@@ -33,17 +34,18 @@ func (job *AwsDataRetrieveJob) FetchAwsVolumesNotUsed(profile model.AwsProfile, 
 
 	listRec := make([]interface{}, 0)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(profile.Region),
-		Credentials: credentials.NewStaticCredentials(profile.AccessKeyId, *profile.SecretAccessKey, ""),
-	})
+	credsProvider := credentials.NewStaticCredentialsProvider(profile.AccessKeyId, *profile.SecretAccessKey, "")
+
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(credsProvider),
+		config.WithRegion(profile.Region))
 	if err != nil {
 		return err
 	}
 
-	ec2Svc := ec2.New(sess)
+	ec2Client := ec2.NewFromConfig(cfg)
 
-	resultec2Svc, err := ec2Svc.DescribeVolumes(nil)
+	resultec2Svc, err := ec2Client.DescribeVolumes(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -92,17 +94,18 @@ func (job *AwsDataRetrieveJob) FetchAwsBlockStorageRightsizing(profile model.Aws
 
 	listRec := make([]interface{}, 0)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(profile.Region),
-		Credentials: credentials.NewStaticCredentials(profile.AccessKeyId, *profile.SecretAccessKey, ""),
-	})
+	credsProvider := credentials.NewStaticCredentialsProvider(profile.AccessKeyId, *profile.SecretAccessKey, "")
+
+	cfg, err := config.LoadDefaultConfig(context.Background(),
+		config.WithCredentialsProvider(credsProvider),
+		config.WithRegion(profile.Region))
 	if err != nil {
 		return err
 	}
 
-	ec2Svc := ec2.New(sess)
+	ec2Client := ec2.NewFromConfig(cfg)
 
-	resultec2Svc, err := ec2Svc.DescribeVolumes(nil)
+	resultec2Svc, err := ec2Client.DescribeVolumes(context.Background(), nil)
 	if err != nil {
 		return err
 	}
@@ -112,7 +115,7 @@ func (job *AwsDataRetrieveJob) FetchAwsBlockStorageRightsizing(profile model.Aws
 
 	var volumeId string
 
-	var iops, throughput int64
+	var iops, throughput int32
 
 	for _, w := range resultec2Svc.Volumes {
 		volumeId = *w.VolumeId
@@ -129,15 +132,15 @@ func (job *AwsDataRetrieveJob) FetchAwsBlockStorageRightsizing(profile model.Aws
 			throughput = 0
 		}
 
-		iopsVolumeReadOps := GetMetricStatistics(sess, "VolumeId", volumeId, "VolumeReadOps", "AWS/EBS", 432000, "Maximum", "Count", timePast, timeNow)
-		iopsVolumeWriteOps := GetMetricStatistics(sess, "VolumeId", volumeId, "VolumeWriteOps", "AWS/EBS", 432000, "Maximum", "Count", timePast, timeNow)
-		throughputVolumeReadBytes := GetMetricStatistics(sess, "VolumeId", volumeId, "VolumeReadBytes", "AWS/EBS", 432000, "Maximum", "Bytes", timePast, timeNow)
-		throughputiopVolumeWriteBytes := GetMetricStatistics(sess, "VolumeId", volumeId, "VolumeWriteBytes", "AWS/EBS", 432000, "Maximum", "Bytes", timePast, timeNow)
+		iopsVolumeReadOps := GetMetricStatistics(cfg, "VolumeId", volumeId, "VolumeReadOps", "AWS/EBS", 432000, types.StatisticMaximum, types.StandardUnitCount, timePast, timeNow)
+		iopsVolumeWriteOps := GetMetricStatistics(cfg, "VolumeId", volumeId, "VolumeWriteOps", "AWS/EBS", 432000, types.StatisticMaximum, types.StandardUnitCount, timePast, timeNow)
+		throughputVolumeReadBytes := GetMetricStatistics(cfg, "VolumeId", volumeId, "VolumeReadBytes", "AWS/EBS", 432000, types.StatisticMaximum, types.StandardUnitBytes, timePast, timeNow)
+		throughputiopVolumeWriteBytes := GetMetricStatistics(cfg, "VolumeId", volumeId, "VolumeWriteBytes", "AWS/EBS", 432000, types.StatisticMaximum, types.StandardUnitBytes, timePast, timeNow)
 		maxIopsValue := getMaximum(iopsVolumeReadOps, iopsVolumeWriteOps)
 		maxThroughputValue := getMaximum(throughputVolumeReadBytes, throughputiopVolumeWriteBytes)
 		maxThroughputValue = maxThroughputValue / 1024 / 1024
 
-		if iops < int64(maxIopsValue/2) && throughput < int64(maxThroughputValue/2) {
+		if iops < int32(maxIopsValue/2) && throughput < int32(maxThroughputValue/2) {
 			var objectName string
 
 			for _, name := range w.Tags {
