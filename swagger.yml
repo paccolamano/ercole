@@ -3214,7 +3214,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/VirtualHostWithoutCluster"
 
-  "/hosts/{hostname}/is-missing-db":
+  "/hosts/{hostname}/missing-dbs":
     parameters:
       - in: path
         name: hostname
@@ -4349,8 +4349,8 @@ paths:
                   type: object
                   properties:
                     id:
+                      type: string
                       minLength: 1
-                      $ref: ""
                     alertCategory:
                       type: string
                     alertAffectedTechnology:

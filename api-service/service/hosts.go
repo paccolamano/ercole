@@ -381,7 +381,7 @@ func (as *APIService) GetHostDataSummaries(filters dto.SearchHostsFilters) ([]dt
 	}
 
 	for i := range hosts {
-		ismissingdb, err := as.IsMissingDB(hosts[i].Hostname)
+		ismissingdb, err := as.GetMissingDbs(hosts[i].Hostname)
 		if err != nil {
 			return nil, err
 		}
@@ -495,7 +495,7 @@ func (as *APIService) DismissHost(hostname string) error {
 	return nil
 }
 
-func (as *APIService) IsMissingDB(hostname string) ([]string, error) {
+func (as *APIService) GetMissingDbs(hostname string) ([]string, error) {
 	unlisted, err := as.Database.FindUnlistedRunningDatabases(hostname)
 	if err != nil {
 		return nil, err

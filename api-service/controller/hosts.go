@@ -308,7 +308,7 @@ func (ctrl *APIController) DismissHost(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }
 
-func (ctrl *APIController) GetMissingDbHost(w http.ResponseWriter, r *http.Request) {
+func (ctrl *APIController) GetMissingDbsHost(w http.ResponseWriter, r *http.Request) {
 	hostname := mux.Vars(r)["hostname"]
 
 	host, err := ctrl.Service.GetHost(hostname, utils.MAX_TIME, true)
@@ -325,7 +325,7 @@ func (ctrl *APIController) GetMissingDbHost(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	res, err := ctrl.Service.IsMissingDB(hostname)
+	res, err := ctrl.Service.GetMissingDbs(hostname)
 	if err != nil {
 		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
 		return
