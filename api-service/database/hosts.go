@@ -1364,3 +1364,39 @@ func (md *MongoDatabase) FindVirtualHostWithoutCluster() ([]dto.VirtualHostWitho
 
 	return res, nil
 }
+
+func (md *MongoDatabase) GetMissingDatabases() ([]dto.HostMissingDatabases, error) {
+	res := make([]dto.HostMissingDatabases, 0)
+
+	pipeline := bson.A{
+		bson.D{{Key: "$match", Value: bson.D{
+			{Key: "archived", Value: false},
+			{Key: "$expr", Value: bson.M{
+				"$gt": bson.A{
+					bson.M{
+						"$size": bson.M{"$ifNull": bson.A{"$features.oracle.database.missingDatabases", bson.A{}}},
+					},
+					0,
+				},
+			}},
+		}}},
+		bson.D{{Key: "$project", Value: bson.M{
+			"hostname":         1,
+			"missingDatabases": "$features.oracle.database.missingDatabases",
+		}}},
+	}
+
+	ctx := context.TODO()
+
+	cur, err := md.Client.Database(md.Config.Mongodb.DBName).Collection(hostCollection).
+		Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cur.All(ctx, &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}

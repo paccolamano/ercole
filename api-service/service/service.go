@@ -228,7 +228,7 @@ type APIServiceInterface interface {
 
 	GetMissingDbs(hostname string) ([]string, error)
 
-	GetAllMissingDbs() ([]dto.OracleDatabaseMissing, error)
+	GetMissingDatabases() ([]dto.HostMissingDatabases, error)
 
 	GetVirtualHostWithoutCluster() ([]dto.VirtualHostWithoutCluster, error)
 

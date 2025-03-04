@@ -97,7 +97,7 @@ func (ctrl *APIController) setupProtectedRoutes(router *mux.Router) {
 	router.HandleFunc("/hosts/environments", ctrl.ListEnvironments).Methods("GET")
 	router.HandleFunc("/hosts/clusters", ctrl.SearchClusters).Methods("GET")
 	router.HandleFunc("/hosts/clusters/{name}", ctrl.GetCluster).Methods("GET")
-	router.HandleFunc("/hosts/missing-dbs", ctrl.GetAllMissingDb).Methods("GET")
+	router.HandleFunc("/hosts/missing-dbs", ctrl.GetMissingDatabases).Methods("GET")
 
 	router.HandleFunc("/hosts/no-clusters", ctrl.GetVirtualHostWithoutCluster).Methods("GET")
 

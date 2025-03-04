@@ -509,8 +509,8 @@ func (as *APIService) GetMissingDbs(hostname string) ([]string, error) {
 	return append(unlisted, unretrieved...), nil
 }
 
-func (as *APIService) GetAllMissingDbs() ([]dto.OracleDatabaseMissing, error) {
-	return as.Database.FindAllMissingDatabases()
+func (as *APIService) GetMissingDatabases() ([]dto.HostMissingDatabases, error) {
+	return as.Database.GetMissingDatabases()
 }
 
 func (as *APIService) GetVirtualHostWithoutCluster() ([]dto.VirtualHostWithoutCluster, error) {

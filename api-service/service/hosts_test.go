@@ -1069,19 +1069,31 @@ func TestGetAllMissingDbs_Success(t *testing.T) {
 		AlertSvcClient: asc,
 	}
 
-	expected := []dto.OracleDatabaseMissing{
+	expected := []dto.HostMissingDatabases{
 		{
 			Hostname: "host01",
-			MissingDbs: []string{
-				"db01",
-				"db02",
+			MissingDatabases: []dto.MissingDatabase{
+				{
+					Name: "db01",
+					Ignorable: dto.Ignorable{
+						Ignored:        false,
+						IgnoredComment: "",
+					},
+				},
+				{
+					Name: "db02",
+					Ignorable: dto.Ignorable{
+						Ignored:        true,
+						IgnoredComment: "this is no longer needed",
+					},
+				},
 			},
 		},
 	}
 
-	db.EXPECT().FindAllMissingDatabases().Return(expected, nil)
+	db.EXPECT().GetMissingDatabases().Return(expected, nil)
 
-	actual, err := as.GetAllMissingDbs()
+	actual, err := as.GetMissingDatabases()
 
 	require.NoError(t, err)
 

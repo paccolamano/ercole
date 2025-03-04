@@ -336,8 +336,8 @@ func (ctrl *APIController) GetMissingDbsHost(w http.ResponseWriter, r *http.Requ
 	}{IsMissingDB: res})
 }
 
-func (ctrl *APIController) GetAllMissingDb(w http.ResponseWriter, r *http.Request) {
-	res, err := ctrl.Service.GetAllMissingDbs()
+func (ctrl *APIController) GetMissingDatabases(w http.ResponseWriter, r *http.Request) {
+	res, err := ctrl.Service.GetMissingDatabases()
 	if err != nil {
 		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
 		return

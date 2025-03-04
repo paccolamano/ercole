@@ -12,9 +12,10 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 package dto
 
-type OracleDatabaseMissing struct {
-	Hostname   string   `json:"hostname" bson:"hostname"`
-	MissingDbs []string `json:"missingdbs" bson:"missingdbs"`
+type HostMissingDatabases struct {
+	Hostname         string            `json:"hostname" bson:"hostname"`
+	MissingDatabases []MissingDatabase `json:"missingDatabases" bson:"missingDatabases"`
 }

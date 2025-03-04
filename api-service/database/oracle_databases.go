@@ -212,61 +212,6 @@ func (md *MongoDatabase) FindUnretrievedDatabases(hostname string) ([]string, er
 	return out, nil
 }
 
-func (md *MongoDatabase) FindAllMissingDatabases() ([]dto.OracleDatabaseMissing, error) {
-	res := make([]dto.OracleDatabaseMissing, 0)
-
-	pipeline := bson.A{
-		bson.D{{Key: "$match", Value: bson.D{{Key: "archived", Value: false}}}},
-		bson.D{
-			{Key: "$project",
-				Value: bson.D{
-					{Key: "hostname", Value: 1},
-					{Key: "missingdbs",
-						Value: bson.D{
-							{Key: "$concatArrays",
-								Value: bson.A{
-									bson.D{
-										{Key: "$ifNull",
-											Value: bson.A{
-												"$features.oracle.database.unlistedRunningDatabases",
-												bson.A{},
-											},
-										},
-									},
-									bson.D{
-										{Key: "$ifNull",
-
-											Value: bson.A{
-												"$features.oracle.database.unretrievedDatabases",
-												bson.A{},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		bson.D{{Key: "$match", Value: bson.D{{Key: "missingdbs", Value: bson.D{{Key: "$ne", Value: bson.A{}}}}}}},
-	}
-
-	ctx := context.TODO()
-
-	cur, err := md.Client.Database(md.Config.Mongodb.DBName).Collection(hostCollection).
-		Aggregate(ctx, pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cur.All(ctx, &res); err != nil {
-		return nil, err
-	}
-
-	return res, nil
-}
-
 func (md *MongoDatabase) DbExist(hostname, dbname string) (bool, error) {
 	filter := bson.D{
 		{Key: "archived", Value: false},

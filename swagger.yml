@@ -2471,15 +2471,22 @@ components:
           type: array
           items:
             type: string
-    OracleDatabaseMissing:
+    HostMissingDatabases:
       type: object
       properties:
         hostname:
           type: string
-        missingdbs:
+        missingDatabases:
           type: array
           items:
-            type: string
+            type: object
+            properties:
+              name:
+                type: string
+              ignored:
+                type: boolean
+              ignoredComment:
+                type: string
     VirtualHostWithoutCluster:
       type: object
       properties:
@@ -3188,7 +3195,7 @@ paths:
     get:
       tags:
         - api-service
-      description: Get all the missing database (unretrieved and unlisted)
+      description: Get all hosts with missing databases
       responses:
         "200":
           description: OK
@@ -3197,7 +3204,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/OracleDatabaseMissing"
+                  $ref: "#/components/schemas/HostMissingDatabases"
 
   /hosts/no-clusters:
     get:
