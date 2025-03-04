@@ -308,7 +308,17 @@ func (ctrl *APIController) DismissHost(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }
 
-func (ctrl *APIController) GetMissingDbsHost(w http.ResponseWriter, r *http.Request) {
+func (ctrl *APIController) GetMissingDatabases(w http.ResponseWriter, r *http.Request) {
+	res, err := ctrl.Service.GetMissingDatabases()
+	if err != nil {
+		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
+		return
+	}
+
+	utils.WriteJSONResponse(w, http.StatusOK, res)
+}
+
+func (ctrl *APIController) GetMissingDatabasesByHostname(w http.ResponseWriter, r *http.Request) {
 	hostname := mux.Vars(r)["hostname"]
 
 	host, err := ctrl.Service.GetHost(hostname, utils.MAX_TIME, true)
@@ -325,19 +335,7 @@ func (ctrl *APIController) GetMissingDbsHost(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	res, err := ctrl.Service.GetMissingDbs(hostname)
-	if err != nil {
-		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, struct {
-		IsMissingDB []string
-	}{IsMissingDB: res})
-}
-
-func (ctrl *APIController) GetMissingDatabases(w http.ResponseWriter, r *http.Request) {
-	res, err := ctrl.Service.GetMissingDatabases()
+	res, err := ctrl.Service.GetMissingDatabasesByHostname(hostname)
 	if err != nil {
 		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
 		return

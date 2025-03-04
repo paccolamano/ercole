@@ -1146,49 +1146,6 @@ func (md *MongoDatabase) getHostTechnology(hostname string, olderThan time.Time)
 	return out, nil
 }
 
-// FindUnlistedRunningDatabases Check if there are any db instances not running on host
-func (md *MongoDatabase) FindUnlistedRunningDatabases(hostname string) ([]string, error) {
-	ctx := context.TODO()
-
-	out := make([]string, 0)
-
-	cur, err := md.Client.Database(md.Config.Mongodb.DBName).Collection(hostCollection).
-		Aggregate(ctx, bson.A{
-			bson.D{
-				{Key: "$match",
-					Value: bson.D{
-						{Key: "archived", Value: false},
-						{Key: "hostname", Value: hostname},
-					},
-				},
-			},
-			bson.D{
-				{Key: "$unwind",
-					Value: bson.D{
-						{Key: "path", Value: "$features.oracle.database.unlistedRunningDatabases"},
-						{Key: "preserveNullAndEmptyArrays", Value: false},
-					},
-				},
-			},
-			bson.D{{Key: "$project", Value: bson.D{{Key: "db", Value: "$features.oracle.database.unlistedRunningDatabases"}}}},
-			bson.D{{Key: "$group", Value: bson.D{{Key: "_id", Value: "$db"}}}},
-		})
-	if err != nil {
-		return nil, err
-	}
-
-	for cur.Next(ctx) {
-		var item map[string]string
-		if cur.Decode(&item) != nil {
-			return nil, utils.NewError(err, "Decode ERROR")
-		}
-
-		out = append(out, item["_id"])
-	}
-
-	return out, nil
-}
-
 func (md *MongoDatabase) SearchHostMysqlLMS(filter dto.SearchHostsAsLMS) ([]dto.MySqlHostLMS, error) {
 	ctx := context.TODO()
 
@@ -1383,6 +1340,37 @@ func (md *MongoDatabase) GetMissingDatabases() ([]dto.HostMissingDatabases, erro
 		bson.D{{Key: "$project", Value: bson.M{
 			"hostname":         1,
 			"missingDatabases": "$features.oracle.database.missingDatabases",
+		}}},
+	}
+
+	ctx := context.TODO()
+
+	cur, err := md.Client.Database(md.Config.Mongodb.DBName).Collection(hostCollection).
+		Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cur.All(ctx, &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (md *MongoDatabase) GetMissingDatabasesByHostname(hostname string) ([]dto.MissingDatabase, error) {
+	res := make([]dto.MissingDatabase, 0)
+
+	pipeline := bson.A{
+		bson.D{{Key: "$match", Value: bson.D{
+			{Key: "archived", Value: false},
+			{Key: "hostname", Value: hostname},
+		}}},
+		bson.D{{Key: "$unwind", Value: "$features.oracle.database.missingDatabases"}},
+		bson.D{{Key: "$project", Value: bson.M{
+			"name":           "$features.oracle.database.missingDatabases.name",
+			"ignored":        "$features.oracle.database.missingDatabases.ignored",
+			"ignoredComment": "$features.oracle.database.missingDatabases.ignoredComment",
 		}}},
 	}
 

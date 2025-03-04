@@ -538,7 +538,7 @@ func TestSearchHostsAsXLSX(t *testing.T) {
 			VirtualizationNode: "",
 			Cluster:            "",
 			Databases:          map[string][]string{},
-			IsMissingDB:        []string{},
+			MissingDatabases:   []dto.MissingDatabase{},
 		},
 
 		{
@@ -715,8 +715,7 @@ func TestGetHostDataSummaries(t *testing.T) {
 		db.EXPECT().GetHostDataSummaries(tc.filters).Return(tc.res, tc.err).Times(1)
 
 		if tc.res != nil {
-			db.EXPECT().FindUnretrievedDatabases("pluto").Return(nil, nil).Times(1)
-			db.EXPECT().FindUnlistedRunningDatabases("pluto").Return(nil, nil).Times(1)
+			db.EXPECT().GetMissingDatabasesByHostname("pluto").Return(nil, nil).Times(1)
 		}
 
 		res, err := as.GetHostDataSummaries(tc.filters)

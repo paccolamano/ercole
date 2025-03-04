@@ -301,7 +301,9 @@ func (as *APIService) SearchHostsAsXLSX(filters dto.SearchHostsFilters) (*exceli
 			technology.WriteString(k)
 		}
 
-		missingdbs.WriteString(strings.Join(val.IsMissingDB, " "))
+		for _, v := range val.MissingDatabases {
+			missingdbs.WriteString(fmt.Sprintf("%s ", v.Name))
+		}
 
 		file.SetCellValue(sheet, nextAxis(), databases.String())
 		file.SetCellValue(sheet, nextAxis(), missingdbs.String())
@@ -381,12 +383,12 @@ func (as *APIService) GetHostDataSummaries(filters dto.SearchHostsFilters) ([]dt
 	}
 
 	for i := range hosts {
-		ismissingdb, err := as.GetMissingDbs(hosts[i].Hostname)
+		missingDbs, err := as.GetMissingDatabasesByHostname(hosts[i].Hostname)
 		if err != nil {
 			return nil, err
 		}
 
-		hosts[i].IsMissingDB = ismissingdb
+		hosts[i].MissingDatabases = missingDbs
 	}
 
 	return hosts, nil
@@ -495,22 +497,12 @@ func (as *APIService) DismissHost(hostname string) error {
 	return nil
 }
 
-func (as *APIService) GetMissingDbs(hostname string) ([]string, error) {
-	unlisted, err := as.Database.FindUnlistedRunningDatabases(hostname)
-	if err != nil {
-		return nil, err
-	}
-
-	unretrieved, err := as.Database.FindUnretrievedDatabases(hostname)
-	if err != nil {
-		return nil, err
-	}
-
-	return append(unlisted, unretrieved...), nil
-}
-
 func (as *APIService) GetMissingDatabases() ([]dto.HostMissingDatabases, error) {
 	return as.Database.GetMissingDatabases()
+}
+
+func (as *APIService) GetMissingDatabasesByHostname(hostname string) ([]dto.MissingDatabase, error) {
+	return as.Database.GetMissingDatabasesByHostname(hostname)
 }
 
 func (as *APIService) GetVirtualHostWithoutCluster() ([]dto.VirtualHostWithoutCluster, error) {

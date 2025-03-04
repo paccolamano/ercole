@@ -2471,6 +2471,15 @@ components:
           type: array
           items:
             type: string
+    MissingDatabase:
+      type: object
+      properties:
+        name:
+          type: string
+        ignored:
+          type: boolean
+        ignoredComment:
+          type: string
     HostMissingDatabases:
       type: object
       properties:
@@ -2479,14 +2488,7 @@ components:
         missingDatabases:
           type: array
           items:
-            type: object
-            properties:
-              name:
-                type: string
-              ignored:
-                type: boolean
-              ignoredComment:
-                type: string
+            $ref: '#/components/schemas/MissingDatabase'
     VirtualHostWithoutCluster:
       type: object
       properties:
@@ -3232,7 +3234,7 @@ paths:
     get:
       tags:
         - api-service
-      operationId: GetMissingDbHost
+      operationId: GetMissingDatabasesByHostname
       summary: Check missing database
       description: Check if there are any db instances not running on host
       responses:
@@ -3241,13 +3243,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  isMissingDB:
-                    type: array
-                    items:
-                      type: string
-          
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissingDatabase'
   ? "/hosts/{hostname}/technologies/oracle/databases/{dbname}/licenses/{licenseTypeID}/ignored/{ignored}"
   : parameters:
       - in: path

@@ -173,7 +173,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				Cluster:            "Puzzait",
 				Databases:          map[string][]string{},
 				Technology:         "",
-				IsMissingDB:        []string{},
+				MissingDatabases:   []dto.MissingDatabase(nil),
 			},
 			{
 				ID:           "5ea2d26d20d55cbdc35022b4",
@@ -207,9 +207,9 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 					VeritasClusterServer:    false,
 					VeritasClusterHostnames: []string(nil),
 				},
-				Databases:   map[string][]string{},
-				Technology:  "",
-				IsMissingDB: []string{},
+				Databases:        map[string][]string{},
+				Technology:       "",
+				MissingDatabases: []dto.MissingDatabase(nil),
 			},
 			{
 				ID:           "5e96ade270c184faca93fe36",
@@ -248,8 +248,8 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				Databases: map[string][]string{
 					"Oracle/Database": {"ERCOLE"},
 				},
-				Technology:  "Oracle/Database",
-				IsMissingDB: []string{},
+				Technology:       "Oracle/Database",
+				MissingDatabases: []dto.MissingDatabase(nil),
 			},
 		}
 
@@ -310,7 +310,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				VirtualizationNode: "s157-cb32c10a56c256746c337e21b3f82402",
 				Cluster:            "Puzzait",
 				Technology:         "Oracle/Database",
-				IsMissingDB:        []string{},
+				MissingDatabases:   []dto.MissingDatabase(nil),
 				Databases: map[string][]string{
 					"Oracle/Database": {
 						"ERCOLE"}}},
@@ -362,7 +362,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				Cluster:            "Puzzait",
 				Databases:          map[string][]string{},
 				Technology:         "",
-				IsMissingDB:        []string{},
+				MissingDatabases:   []dto.MissingDatabase(nil),
 			},
 		}
 		assert.Equal(t, expectedOut, out)
