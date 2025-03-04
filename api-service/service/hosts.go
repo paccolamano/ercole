@@ -382,15 +382,6 @@ func (as *APIService) GetHostDataSummaries(filters dto.SearchHostsFilters) ([]dt
 		return nil, err
 	}
 
-	for i := range hosts {
-		missingDbs, err := as.GetMissingDatabasesByHostname(hosts[i].Hostname)
-		if err != nil {
-			return nil, err
-		}
-
-		hosts[i].MissingDatabases = missingDbs
-	}
-
 	return hosts, nil
 }
 
