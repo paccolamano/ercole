@@ -173,7 +173,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				Cluster:            "Puzzait",
 				Databases:          map[string][]string{},
 				Technology:         "",
-				MissingDatabases:   []dto.MissingDatabase(nil),
+				MissingDatabases:   []model.MissingDatabase(nil),
 			},
 			{
 				ID:           "5ea2d26d20d55cbdc35022b4",
@@ -209,7 +209,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				},
 				Databases:        map[string][]string{},
 				Technology:       "",
-				MissingDatabases: []dto.MissingDatabase(nil),
+				MissingDatabases: []model.MissingDatabase(nil),
 			},
 			{
 				ID:           "5e96ade270c184faca93fe36",
@@ -249,7 +249,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 					"Oracle/Database": {"ERCOLE"},
 				},
 				Technology:       "Oracle/Database",
-				MissingDatabases: []dto.MissingDatabase(nil),
+				MissingDatabases: []model.MissingDatabase(nil),
 			},
 		}
 
@@ -310,7 +310,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				VirtualizationNode: "s157-cb32c10a56c256746c337e21b3f82402",
 				Cluster:            "Puzzait",
 				Technology:         "Oracle/Database",
-				MissingDatabases:   []dto.MissingDatabase(nil),
+				MissingDatabases:   []model.MissingDatabase(nil),
 				Databases: map[string][]string{
 					"Oracle/Database": {
 						"ERCOLE"}}},
@@ -362,7 +362,7 @@ func (m *MongodbSuite) TestGetHostDataSummaries() {
 				Cluster:            "Puzzait",
 				Databases:          map[string][]string{},
 				Technology:         "",
-				MissingDatabases:   []dto.MissingDatabase(nil),
+				MissingDatabases:   []model.MissingDatabase(nil),
 			},
 		}
 		assert.Equal(t, expectedOut, out)
@@ -397,6 +397,7 @@ func (m *MongodbSuite) TestGetHost() {
 		_, err := m.db.GetHost("test-virt", utils.MIN_TIME, false)
 		m.Assert().Equal(utils.ErrHostNotFound, err)
 	})
+
 	m.T().Run("should_not_find", func(t *testing.T) {
 		_, err := m.db.GetHost("foobar", utils.MAX_TIME, false)
 		m.Assert().Equal(utils.ErrHostNotFound, err)
@@ -1008,7 +1009,7 @@ func (m *MongodbSuite) TestGetHost() {
 			Features: model.Features{
 				Oracle: &model.OracleFeature{
 					Database: &model.OracleDatabaseFeature{
-						UnlistedRunningDatabases: []string{},
+						MissingDatabases: []model.MissingDatabase(nil),
 						Databases: []model.OracleDatabase{
 							{
 								ADDMs:        []model.OracleDatabaseAddm{},
@@ -1169,7 +1170,7 @@ func (m *MongodbSuite) TestGetHost() {
 			Features: model.Features{
 				Oracle: &model.OracleFeature{
 					Database: &model.OracleDatabaseFeature{
-						UnlistedRunningDatabases: []string{},
+						MissingDatabases: []model.MissingDatabase(nil),
 						Databases: []model.OracleDatabase{
 							{
 								ADDMs:      []model.OracleDatabaseAddm{},
@@ -1303,7 +1304,7 @@ func (m *MongodbSuite) TestGetHost() {
 			Features: model.Features{
 				Oracle: &model.OracleFeature{
 					Database: &model.OracleDatabaseFeature{
-						UnlistedRunningDatabases: []string{},
+						MissingDatabases: []model.MissingDatabase(nil),
 						Databases: []model.OracleDatabase{
 							{
 								ADDMs:             []model.OracleDatabaseAddm{},

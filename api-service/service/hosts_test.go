@@ -538,7 +538,7 @@ func TestSearchHostsAsXLSX(t *testing.T) {
 			VirtualizationNode: "",
 			Cluster:            "",
 			Databases:          map[string][]string{},
-			MissingDatabases:   []dto.MissingDatabase{},
+			MissingDatabases:   []model.MissingDatabase{},
 		},
 
 		{
@@ -713,10 +713,6 @@ func TestGetHostDataSummaries(t *testing.T) {
 		}
 
 		db.EXPECT().GetHostDataSummaries(tc.filters).Return(tc.res, tc.err).Times(1)
-
-		if tc.res != nil {
-			db.EXPECT().GetMissingDatabasesByHostname("pluto").Return(nil, nil).Times(1)
-		}
 
 		res, err := as.GetHostDataSummaries(tc.filters)
 		if tc.err == nil {
@@ -1071,17 +1067,17 @@ func TestGetAllMissingDbs_Success(t *testing.T) {
 	expected := []dto.HostMissingDatabases{
 		{
 			Hostname: "host01",
-			MissingDatabases: []dto.MissingDatabase{
+			MissingDatabases: []model.MissingDatabase{
 				{
 					Name: "db01",
-					Ignorable: dto.Ignorable{
+					Ignorable: model.Ignorable{
 						Ignored:        false,
 						IgnoredComment: "",
 					},
 				},
 				{
 					Name: "db02",
-					Ignorable: dto.Ignorable{
+					Ignorable: model.Ignorable{
 						Ignored:        true,
 						IgnoredComment: "this is no longer needed",
 					},

@@ -492,7 +492,7 @@ func (as *APIService) GetMissingDatabases() ([]dto.HostMissingDatabases, error) 
 	return as.Database.GetMissingDatabases()
 }
 
-func (as *APIService) GetMissingDatabasesByHostname(hostname string) ([]dto.MissingDatabase, error) {
+func (as *APIService) GetMissingDatabasesByHostname(hostname string) ([]model.MissingDatabase, error) {
 	return as.Database.GetMissingDatabasesByHostname(hostname)
 }
 

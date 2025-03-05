@@ -15,7 +15,9 @@
 
 package dto
 
+import "github.com/ercole-io/ercole/v2/model"
+
 type HostMissingDatabases struct {
-	Hostname         string            `json:"hostname" bson:"hostname"`
-	MissingDatabases []MissingDatabase `json:"missingDatabases" bson:"missingDatabases"`
+	Hostname         string                  `json:"hostname" bson:"hostname"`
+	MissingDatabases []model.MissingDatabase `json:"missingDatabases" bson:"missingDatabases"`
 }

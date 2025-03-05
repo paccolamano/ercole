@@ -1,4 +1,4 @@
-// Copyright (c) 2024 Sorint.lab S.p.A.
+// Copyright (c) 2020 Sorint.lab S.p.A.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package dto
+package model
 
-type Ignorable struct {
-	Ignored        bool   `json:"ignored" bson:"ignored"`
-	IgnoredComment string `json:"ignoredComment" bson:"ignoredComment"`
+type MissingDatabase struct {
+	Name string `json:"name" bson:"name"`
+	Ignorable
 }

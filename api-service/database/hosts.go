@@ -1337,8 +1337,8 @@ func (md *MongoDatabase) GetMissingDatabases() ([]dto.HostMissingDatabases, erro
 	return res, nil
 }
 
-func (md *MongoDatabase) GetMissingDatabasesByHostname(hostname string) ([]dto.MissingDatabase, error) {
-	res := make([]dto.MissingDatabase, 0)
+func (md *MongoDatabase) GetMissingDatabasesByHostname(hostname string) ([]model.MissingDatabase, error) {
+	res := make([]model.MissingDatabase, 0)
 
 	pipeline := bson.A{
 		bson.D{{Key: "$match", Value: bson.D{

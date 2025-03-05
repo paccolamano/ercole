@@ -226,7 +226,7 @@ type APIServiceInterface interface {
 	// DismissHost dismiss the specified host
 	DismissHost(hostname string) error
 
-	GetMissingDatabasesByHostname(hostname string) ([]dto.MissingDatabase, error)
+	GetMissingDatabasesByHostname(hostname string) ([]model.MissingDatabase, error)
 	GetMissingDatabases() ([]dto.HostMissingDatabases, error)
 
 	GetVirtualHostWithoutCluster() ([]dto.VirtualHostWithoutCluster, error)
