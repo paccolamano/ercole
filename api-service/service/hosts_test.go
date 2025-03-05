@@ -1064,7 +1064,7 @@ func TestGetAllMissingDbs_Success(t *testing.T) {
 		AlertSvcClient: asc,
 	}
 
-	expected := []dto.HostMissingDatabases{
+	expected := []dto.OracleDatabaseMissingDbs{
 		{
 			Hostname: "host01",
 			MissingDatabases: []model.MissingDatabase{

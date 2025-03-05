@@ -308,42 +308,6 @@ func (ctrl *APIController) DismissHost(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSONResponse(w, http.StatusOK, nil)
 }
 
-func (ctrl *APIController) GetMissingDatabases(w http.ResponseWriter, r *http.Request) {
-	res, err := ctrl.Service.GetMissingDatabases()
-	if err != nil {
-		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, res)
-}
-
-func (ctrl *APIController) GetMissingDatabasesByHostname(w http.ResponseWriter, r *http.Request) {
-	hostname := mux.Vars(r)["hostname"]
-
-	host, err := ctrl.Service.GetHost(hostname, utils.MAX_TIME, true)
-	if errors.Is(err, utils.ErrHostNotFound) {
-		utils.WriteAndLogError(ctrl.Log, w, http.StatusNotFound, err)
-		return
-	} else if err != nil {
-		utils.WriteAndLogError(ctrl.Log, w, http.StatusInternalServerError, err)
-		return
-	}
-
-	if !ctrl.userHasAccessToLocation(r, host.Location) {
-		utils.WriteAndLogError(ctrl.Log, w, http.StatusForbidden, utils.ErrPermissionDenied)
-		return
-	}
-
-	res, err := ctrl.Service.GetMissingDatabasesByHostname(hostname)
-	if err != nil {
-		utils.WriteAndLogError(ctrl.Log, w, http.StatusUnprocessableEntity, err)
-		return
-	}
-
-	utils.WriteJSONResponse(w, http.StatusOK, res)
-}
-
 func (ctrl *APIController) GetVirtualHostWithoutCluster(w http.ResponseWriter, r *http.Request) {
 	res, err := ctrl.Service.GetVirtualHostWithoutCluster()
 	if err != nil {

@@ -227,7 +227,7 @@ type APIServiceInterface interface {
 	DismissHost(hostname string) error
 
 	GetMissingDatabasesByHostname(hostname string) ([]model.MissingDatabase, error)
-	GetMissingDatabases() ([]dto.HostMissingDatabases, error)
+	GetMissingDatabases() ([]dto.OracleDatabaseMissingDbs, error)
 
 	GetVirtualHostWithoutCluster() ([]dto.VirtualHostWithoutCluster, error)
 
