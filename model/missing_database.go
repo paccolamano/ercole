@@ -16,6 +16,6 @@
 package model
 
 type MissingDatabase struct {
-	Name string `json:"name" bson:"name"`
-	Ignorable
+	Name      string `json:"name" bson:"name"`
+	Ignorable `bson:"inline"`
 }
